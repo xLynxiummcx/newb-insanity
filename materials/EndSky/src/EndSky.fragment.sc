@@ -1,5 +1,4 @@
-#version 300 es
-precision mediump float;
+
 
 // Input variables
 in vec2 v_texcoord0;
