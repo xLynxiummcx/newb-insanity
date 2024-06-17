@@ -85,33 +85,35 @@ vec3 getSunBloom(float viewDirX, vec3 horizonEdgeCol, vec3 FOG_COLOR) {
 
   float spread = smoothstep(0.0, 1.0, abs(viewDirX));
   float sunBloom = spread*spread;
-  sunBloom = 0.5*spread + sunBloom*sunBloom*sunBloom*1.5;
+  sunBloom = 5.0*spread + sunBloom*sunBloom*sunBloom*6.3;
 
   return NL_MORNING_SUN_COL*horizonEdgeCol*(sunBloom*factor*factor);
 }
 
 
 vec3 renderEndSky(vec3 horizonCol, vec3 zenithCol, vec3 viewDir, float t) {
-  t *= 0.1;
+  t *= 0.78; // Accelerate time effect
+
   float a = atan2(viewDir.x, viewDir.z);
 
-  float n1 = 0.5 + 0.5*sin(3.0*a + t + 10.0*viewDir.x*viewDir.y);
-  float n2 = 0.5 + 0.5*sin(5.0*a + 0.5*t + 5.0*n1 + 0.1*sin(40.0*a -4.0*t));
+  float n1 = 0.5 + 0.5*sin(3.0*a + 2.0*t + 10.0*viewDir.x*viewDir.y); // Increase frequency and phase shift
+  float n2 = 0.5 + 0.5*sin(5.0*a + 0.5*t + 5.0*n1 + 0.1*sin(40.0*a - 4.0*t)); // Adjust phase and amplitude modulation
     
-  float waves = 0.7*n2*n1 + 0.3*n1;
-    
-  float grad = 0.5 + 0.5*viewDir.y;
-  float streaks = waves*(1.0 - grad*grad*grad);
-  streaks += (1.0-streaks)*smoothstep(1.0-waves, -1.0, viewDir.y);
+  float waves = 0.7*n2*n1 + 0.3*n1; // Adjust wave intensity
 
-  float f = 0.3*streaks + 0.7*smoothstep(1.0, -0.5, viewDir.y);
+  float grad = 0.5 + 0.5*viewDir.y;
+  float streaks = waves*(1.0 - grad*grad*grad); // Brighten streaks
+
+  streaks += (1.0 - streaks) * smoothstep(1.0 - waves, -1.0, viewDir.y);
+
+  float f = 0.5*streaks + 0.5*smoothstep(1.0, -0.5, viewDir.y); // Adjust mix factor
   float h = streaks*streaks;
   float g = h*h;
   g *= g;
-    
-  vec3 sky = mix(zenithCol, horizonCol, f*f);
-  sky += (0.1*streaks + 2.0*g*g*g + h*h*h)*vec3(2.0,0.5,0.0);
-  sky += 0.25*streaks*spectrum(sin(2.0*viewDir.x*viewDir.y+t));
+
+  vec3 sky = mix(zenithCol, horizonCol, f*f); // Adjust brightness mix
+  sky += (0.3*streaks + 2.0*g*g*g + h*h*h) * vec3(2.0, 0.5, 0.0); // Brighten streaks and waves
+  sky += 0.5*streaks * spectrum(sin(4.0*viewDir.x*viewDir.y + t)); // Adjust spectral effect
 
   return sky;
 }
