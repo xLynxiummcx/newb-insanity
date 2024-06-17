@@ -1,4 +1,4 @@
-#version 330 core // Adjust the version as needed
+//#version 330 core // Adjust the version as needed
 
 // Input variables
 in vec2 v_texcoord0;
