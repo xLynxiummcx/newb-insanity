@@ -1,9 +1,15 @@
-$input v_texcoord0, v_posTime
+#version 330 core // Adjust the version as needed
 
-#include <bgfx_shader.sh>
-#include <newb/main.sh>
+// Input variables
+in vec2 v_texcoord0;
+in vec4 v_posTime;
 
-SAMPLER2D(s_MatTexture, 0);
+// Uniforms
+uniform sampler2D s_MatTexture;
+
+// Include required GLSL functions (assuming they are defined in these headers)
+#include "bgfx_shader.glsl"
+#include "newb/main.glsl"
 
 vec3 getRainbowColor(float t) {
     float r = abs(sin(t * 6.2831853 + 0.0)); // 2 * PI for a full cycle
@@ -28,6 +34,8 @@ mat2 getRotationMatrix(float angle) {
     return mat2(c, -s, s, c);
 }
 
+out vec4 FragColor;
+
 void main() {
     // Calculate rotation angle based on time
     float rotationAngle = v_posTime.w * 0.5; // Adjust speed by changing the multiplier
@@ -35,12 +43,12 @@ void main() {
     // Apply rotation to the texture coordinates
     vec2 rotatedTexCoords = getRotationMatrix(rotationAngle) * (v_texcoord0 - 0.5) + 0.5;
 
-    vec4 diffuse = texture2D(s_MatTexture, rotatedTexCoords);
+    vec4 diffuse = texture(s_MatTexture, rotatedTexCoords);
 
     // Generate rainbow color based on texture coordinates
     vec3 rainbowColor = getRainbowColor(rotatedTexCoords.x + rotatedTexCoords.y);
 
-    // end sky gradient
+    // End sky gradient
     vec3 color = renderEndSky(getEndHorizonCol(), getEndZenithCol(), normalize(v_posTime.xyz), v_posTime.w);
 
     // Add nebula clouds
@@ -52,5 +60,5 @@ void main() {
 
     color = colorCorrection(color);
 
-    gl_FragColor = vec4(color, 1.0);
+    FragColor = vec4(color, 1.0);
 }
