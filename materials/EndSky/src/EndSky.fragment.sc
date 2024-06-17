@@ -5,16 +5,52 @@ $input v_texcoord0, v_posTime
 
 SAMPLER2D(s_MatTexture, 0);
 
+vec3 getRainbowColor(float t) {
+    float r = abs(sin(t * 6.2831853 + 0.0)); // 2 * PI for a full cycle
+    float g = abs(sin(t * 6.2831853 + 2.094393)); // 2 * PI / 3 phase shift
+    float b = abs(sin(t * 6.2831853 + 4.188787)); // 4 * PI / 3 phase shift
+    return vec3(r, g, b);
+}
+
+// Function to generate nebula clouds
+vec3 generateNebulaClouds(vec2 uv, float time) {
+    float cloud1 = abs(sin(uv.x * 12.0 + time * 0.1));
+    float cloud2 = abs(sin(uv.y * 8.0 + time * 0.07));
+    float cloud3 = abs(sin((uv.x + uv.y) * 16.0 + time * 0.05));
+    float cloudIntensity = (cloud1 + cloud2 + cloud3) / 3.0;
+    return vec3(0.5, 0.2, 0.8) * cloudIntensity; // Adjust color and intensity as needed
+}
+
+// Function to create a 2D rotation matrix
+mat2 getRotationMatrix(float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    return mat2(c, -s, s, c);
+}
+
 void main() {
-  vec4 diffuse = texture2D(s_MatTexture, v_texcoord0);
+    // Calculate rotation angle based on time
+    float rotationAngle = v_posTime.w * 0.5; // Adjust speed by changing the multiplier
 
-  // end sky gradient
-  vec3 color = renderEndSky(getEndHorizonCol(), getEndZenithCol(), normalize(v_posTime.xyz), v_posTime.w);
+    // Apply rotation to the texture coordinates
+    vec2 rotatedTexCoords = getRotationMatrix(rotationAngle) * (v_texcoord0 - 0.5) + 0.5;
 
-  // stars
-  color += 2.8*diffuse.rgb;
+    vec4 diffuse = texture2D(s_MatTexture, rotatedTexCoords);
 
-  color = colorCorrection(color);
+    // Generate rainbow color based on texture coordinates
+    vec3 rainbowColor = getRainbowColor(rotatedTexCoords.x + rotatedTexCoords.y);
 
-  gl_FragColor = vec4(color, 1.0);
+    // end sky gradient
+    vec3 color = renderEndSky(getEndHorizonCol(), getEndZenithCol(), normalize(v_posTime.xyz), v_posTime.w);
+
+    // Add nebula clouds
+    vec3 nebulaClouds = generateNebulaClouds(rotatedTexCoords, v_posTime.w);
+    color += nebulaClouds;
+
+    // Stars with rainbow color
+    color += 89.8 * diffuse.rgb * rainbowColor;
+
+    color = colorCorrection(color);
+
+    gl_FragColor = vec4(color, 1.0);
 }
