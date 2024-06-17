@@ -1,4 +1,5 @@
-//#version 330 core // Adjust the version as needed
+#version 300 es
+precision mediump float;
 
 // Input variables
 in vec2 v_texcoord0;
@@ -8,8 +9,8 @@ in vec4 v_posTime;
 uniform sampler2D s_MatTexture;
 
 // Include required GLSL functions (assuming they are defined in these headers)
-#include "bgfx_shader.sh"
-#include "newb/main.sh"
+#include "bgfx_shader.glsl"
+#include "newb/main.glsl"
 
 vec3 getRainbowColor(float t) {
     float r = abs(sin(t * 6.2831853 + 0.0)); // 2 * PI for a full cycle
