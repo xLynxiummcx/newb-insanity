@@ -19,7 +19,7 @@ jobs:
         path: |
           ${{ github.workspace }}/env
           ${{ github.workspace }}/data
-    - run: .\setup.bat
+    - run: ./setup.sh
     - run: ./pack.sh -w -p Windows
       shell: bash
     - uses: actions/upload-artifact@v4
