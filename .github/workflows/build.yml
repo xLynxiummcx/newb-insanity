@@ -3,7 +3,8 @@ name: build
 on:
   push:
     branches:
-      - lazurite-migrate
+      - main
+      - devel
 
 jobs:
   windows:
