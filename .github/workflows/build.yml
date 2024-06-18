@@ -1,11 +1,11 @@
-name: build-laxu
+name: build
 
 on:
   push:
     branches:
       - main
       - devel
-      - lazurite-migrate
+
 jobs:
   windows:
     runs-on: windows-2019
@@ -19,8 +19,8 @@ jobs:
         path: |
           ${{ github.workspace }}/env
           ${{ github.workspace }}/data
-    - run: ./build.bat setup
-    - run: ./build.bat pack
+    - run: .\setup.bat
+    - run: ./pack.sh -w -p Windows
       shell: bash
     - uses: actions/upload-artifact@v4
       with:
