@@ -19,8 +19,8 @@ jobs:
         path: |
           ${{ github.workspace }}/env
           ${{ github.workspace }}/data
-    - run: /tool/.setup.py
-    - run: ./tool/.pack.py
+    - run: ./build.bat setup
+    - run: ./build.bat pack
       shell: bash
     - uses: actions/upload-artifact@v4
       with:
