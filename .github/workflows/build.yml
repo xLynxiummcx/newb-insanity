@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - devel
+      - lazurite-migrate
 
 jobs:
   windows:
