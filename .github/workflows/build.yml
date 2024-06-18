@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - devel
-
+      - lazurite-migrate
 jobs:
   windows:
     runs-on: windows-2019
