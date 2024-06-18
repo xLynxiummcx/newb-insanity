@@ -5,7 +5,7 @@ set MBT=env\bin\MaterialBinTool-%MBT_VERSION%-native-image.exe
 set SHADERC=env\bin\shaderc.exe
 set DATA_DIR=data
 
-set MBT_RELEASE_URL=https://github.com/devendrn/newb-shader/releases/download/dev/MaterialBinTool-$MBT_VERSION-all.jar
+set MBT_RELEASE_URL=https://github.com/devendrn/newb-shader/releases/download/dev/MaterialBinTool-$MBT_VERSION.jar
 set M_DATA_URL=https://github.com/devendrn/RenderDragonData
 
 if not exist %MBT% (
