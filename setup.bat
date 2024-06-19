@@ -1,28 +1,70 @@
-@echo off
+@echo on
 
-set MBT_VERSION=0.8.2
-set MBT=env\bin\MaterialBinTool-%MBT_VERSION%-native-image.exe
+set MBT=env\bin\MaterialBinTool-0.8.2-native-image.exe
 set SHADERC=env\bin\shaderc.exe
-set DATA_DIR=data
 
-set MBT_RELEASE_URL=https://github.com/ddf8196/MaterialBinTool/releases/download/v%MBT_VERSION%
-set M_DATA_URL=https://github.com/devendrn/RenderDragonData
+set MBT_ARGS=--compile --shaderc %SHADERC% --include include/
 
-if not exist %MBT% (
-  mkdir env\bin\
-  echo Downloading MaterialBinTool-%MBT_VERSION%-native-image.exe
-  curl -L -o %MBT% %MBT_RELEASE_URL%/MaterialBinTool-%MBT_VERSION%-native-image.exe
+set DATA_VER=1.20.0
+set DATA_DIR=data/%DATA_VER%
+set BUILD_DIR=build
+set MATERIALS_DIR=materials
+
+set MATERIALS=
+set TARGETS=
+set ARG_MODE=
+:loop_args
+  if "%1" == "" goto :end_args
+  if "%1" == "-p" goto :set_arg
+  if "%1" == "-t" goto :set_arg
+  if "%1" == "-m" goto :set_arg
+
+  if "%ARG_MODE%" == "" (
+    goto :next_arg
+  )
+  if "%ARG_MODE%" == "-p" (
+    set TARGETS=%TARGETS% %1
+    goto :next_arg
+  )
+  if "%ARG_MODE%" == "-m" (
+    set MATERIALS=%MATERIALS% %MATERIALS_DIR%\%1
+    goto :next_arg
+  )
+  if "%ARG_MODE%" == "-t" (
+    set THREADS=%1
+    goto :next_arg
+  )
+:set_arg
+    set ARG_MODE=%1
+:next_arg
+    shift
+    goto :loop_args
+:end_args
+
+if "%TARGETS%" == "" (
+  set TARGETS=Windows
 )
 
-if not exist %SHADERC% (
-  echo Downloading shaderc.exe
-  curl -L -o %SHADERC% %MBT_RELEASE_URL%/shaderc.exe
+if "%MATERIALS%" == "" (
+  set MATERIALS=%MATERIALS_DIR%\*
 )
 
-if not exist %DATA_DIR% (
-  echo Cloning RenderDragonData
-  git clone --filter=tree:0 %M_DATA_URL% %DATA_DIR%
-) else (
-  cd %DATA_DIR%
-  git pull
+if "%THREADS%" == "" (
+  set THREADS=%NUMBER_OF_PROCESSORS%
+)
+
+set MBT_ARGS=%MBT_ARGS% --threads %THREADS%
+
+for %%f in (%MBT%) do echo %%~nxf 
+for %%p in (%TARGETS%) do (
+  echo ---------------------------
+  echo ^>^> Building materials - %%p %DATA_VER%:
+  if exist %DATA_DIR%\%%p (
+    for /d %%s in (%MATERIALS%) do (
+      echo  - %%s
+      %MBT% %MBT_ARGS% --output %BUILD_DIR%\%%p --data %DATA_DIR%\%%p\%%~nxs %%s
+    )
+  ) else (
+    echo Error: %DATA%\%%p not found
+  )
 )
