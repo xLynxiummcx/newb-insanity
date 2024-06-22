@@ -19,19 +19,24 @@ float nlRenderFogFade(float relativeDist, vec3 FOG_COLOR, vec2 FOG_CONTROL) {
     // smoother transition
     fade = smoothstep(FOG_CONTROL.x, FOG_CONTROL.y, relativeDist);
   } else if (NL_FOG_TYPE == 3) {
-    // exponential fog
-    float fogDensity = 0.32; // Adjust this value for denser or lighter fog
+    // exponential fog with lingering effect
+    float fogDensity = NL_EFOG; // Adjust this value for denser or lighter fog
     fade = 1.0 - exp(-relativeDist * fogDensity);
+
+    // Add lingering fog effect
+    float linger = exp(-relativeDist * relativeDist * fogDensity);
+    fade = max(fade, linger);
   }
 
   // misty effect
   float mistDensity = NL_MIST_DENSITY * (19.0 - 18.0 * FOG_COLOR.g);
   fade += (1.0 - fade) * (0.3 - 0.3 * exp(-relativeDist * relativeDist * mistDensity));
 
+  fade = smoothstep(FOG_CONTROL.x, FOG_CONTROL.y, relativeDist);
+  fade = smoothstep(FOG_CONTROL.x, FOG_CONTROL.y, relativeDist);
   return fade;
 #endif
 }
-
 
 float nlRenderGodRayIntensity(vec3 cPos, vec3 worldPos, float t, vec2 uv1, float relativeDist, vec3 FOG_COLOR) {
     // Offset world position (only works up to 16 blocks)
@@ -57,6 +62,20 @@ float nlRenderGodRayIntensity(vec3 cPos, vec3 worldPos, float t, vec2 uv1, float
     // Apply a smoother step function to the volumetric intensity
     vol = smoothstep(0.0, 0.1, vol);
     vol = smoothstep(0.0, 1.0, vol); // Additional smoothing step
+
+    // Enhance the godrays effect by adding a light scattering term
+    float scatter = exp(-relativeDist * 0.1) * (1.0 - exp(-relativeDist * 0.1));
+    vol *= scatter;
+
+    // Further smooth the volumetric effect with another smoothstep
+    vol = smoothstep(0.0, 0.5, vol);
+    vol = smoothstep(0.0, 1.0, vol);
+
+    // Amplify the volumetric godrays for more dramatic effect
+    vol = pow(vol, NL_VFOG); // Adjust this exponent to control intensity
+
+    // Add a final touch of realistic light scattering
+    vol *= exp(-relativeDist * 0.8); // Adjust this factor for desired scattering effect
 
     return vol;
 }
