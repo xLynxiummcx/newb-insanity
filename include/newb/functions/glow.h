@@ -18,7 +18,7 @@ vec3 glowDetect(vec4 diffuse) {
 }
 
 vec3 glowDetectC(sampler2D tex, vec2 uv) {
-  return glowDetect(texture2D(tex, uv));
+  return glowDetect(texture2DLod(tex, uv, 0.0));
 }
 
 vec3 nlGlow(sampler2D tex, vec2 uv, vec4 diffuse, float shimmer) {
@@ -29,7 +29,7 @@ vec3 nlGlow(sampler2D tex, vec2 uv, vec4 diffuse, float shimmer) {
   // c3 c4 c5
   // c2    c6
   // c1 c8 c7
-  const vec2 texSize = vec2(1024.0, 2048.0);
+  const vec2 texSize = vec2(2048.0, 1024.0);
   const vec2 offset = 1.0 / texSize;
 
   vec3 c1 = glowDetectC(tex, uv - offset);
