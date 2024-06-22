@@ -15,8 +15,8 @@ void main() {
   diffuse = vec4(1.0,1.0,1.0,1.0);
   color = vec4(1.0,1.0,1.0,1.0);
 #else
-  diffuse = texture2D(s_MatTexture, v_texcoord0);
-
+diffuse.rgb = texture2D(s_MatTexture, v_texcoord0).rgb;
+  diffuse.a = texture2DLod(s_MatTexture, v_texcoord0, 0.0).a;
 #ifdef ALPHA_TEST
   if (diffuse.a < 0.6) {
     discard;
