@@ -51,7 +51,7 @@ void extraPlantsFlag(inout bool shouldWave, vec2 uv0, bool isTop) {
     (texN>378 && texN<389) || // tall flowers top
     (texN==914) // sunflower sepal
   ) {
-    shouldWave = true;
+    shouldWave = false;
   } else if ( // top only
     (texN==173) || // cherry blossom sapling
     (texN>749 && texN<761)  || // short flowers
@@ -78,8 +78,9 @@ void nlWave(
   vec2 uv0, vec3 bPos, vec4 COLOR, vec3 cPos, vec3 tiledCpos, highp float t,
   bool isColored, float camDist, bool isTreeLeaves
 ) {
+  uv0 *= vec2(2.0,0.5);
 
-  if (camDist > 13.0) {  // only wave nearby (better performance)
+  if (camDist > 15.0) {  // only wave nearby (better performance)
     return;
   }
 
@@ -99,7 +100,7 @@ void nlWave(
 
   // darken plants bottom - better to not move it elsewhere
   light *= isFarmPlant && !isTop ? 0.7 : 1.1;
-  if (isColored && !isTreeLeaves && uv0.y>0.43 && uv0.y<0.48) {
+  if (isColored && !isTreeLeaves && uv0.y>0.406*0.5 && uv0.y<0.532*0.5) {
     light *= isTop ? 1.2 : 1.2 - 1.2*(bPos.y>0.0 ? 1.5-bPos.y : 0.5);
   }
 
