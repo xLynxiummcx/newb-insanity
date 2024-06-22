@@ -47,86 +47,73 @@ vec4 nlWater(
     vec2 lit, highp float t, float camDist, float rainFactor,
     vec3 torchColor, bool end, bool nether, bool underWater
 ) {
-
     float cosR;
     float bump = NL_WATER_BUMP;
-    vec3 waterRefl;
+    vec3 waterRefl = vec3(0.0);
 
-    if (fractCposY > 0.0) { // reflection for top plane
-        // bump map
-        bump *= disp(tiledCpos, t) + 0.12*sin(t*2.0 + dot(cPos, vec3_splat(NL_CONST_PI_HALF)));
+    // Apply water surface effects only if fractCposY > 0.0 (top plane)
+    if (fractCposY > 0.0) {
+        // Modify bump based on procedural noise
+        bump *= disp(tiledCpos, t) + 0.12 * sin(t * 2.0 + dot(cPos, vec3_splat(NL_CONST_PI_HALF)));
 
-        // calculate cosine of incidence angle and apply water bump
+        // Calculate cosine of incidence angle and apply water bump
         cosR = abs(viewDir.y);
-        cosR = mix(cosR, 1.0-cosR*cosR, bump);
+        cosR = mix(cosR, 1.0 - cosR * cosR, bump);
         viewDir.y = cosR;
 
-        // sky reflection
+        // Sky reflection
         waterRefl = getSkyRefl(horizonEdgeCol, horizonCol, zenithCol, viewDir, FOG_COLOR, t, -wPos.y, rainFactor, end, underWater, nether);
 
-        // cloud and aurora reflection
-#if defined(NL_WATER_CLOUD_REFLECTION2)
-        if (wPos.y < 0.0) {
-            vec2 parallax = viewDir.xz/viewDir.y;
-            vec2 projectedPos = wPos.xz - parallax*100.0*(1.0-bump);
-            // vec3 projectedPos = vPos.xyz;
-            float fade = clamp(2.0 - 0.004*length(projectedPos), 0.0, 1.0);
-            //projectedPos += fade*parallax;
+        // Add moonlight reflection effect (fake)
+        float moonlightFactor = clamp(dot(viewDir, normalize(vec3(0.5, 0.5, 0.5))), 0.0, 1.0);
+        waterRefl += NL_MOONLIGHT_COLOR * moonlightFactor * NL_MOONLIGHT_INTENSITY;
 
-#ifdef NL_AURORA
-            vec4 aurora = renderAurora(projectedPos.xyy, t, rainFactor, FOG_COLOR);
-            waterRefl += 4.0*aurora.rgb*aurora.a*fade;
-#endif
+        // Torch light reflection
+        waterRefl += torchColor * NL_TORCH_INTENSITY * (lit.x * lit.x + lit.x) * bump * 10.0;
 
-#if NL_CLOUD_TYPE == 2
-            vec4 clouds = renderClouds(viewDir, projectedPos.xyy, rainFactor, t,zenithCol, FOG_COLOR );
-            waterRefl = mix(waterRefl, 0.1*clouds.rgb, clouds.a*fade);
-#elif NL_CLOUD_TYPE == 1
-            vec4 clouds = renderCloudsSimple(projectedPos.xyy, t, rainFactor, zenithCol, horizonCol, horizonEdgeCol);
-            waterRefl = mix(waterRefl, 0.1*clouds.rgb, clouds.a*fade);
-#endif
-        }
-#endif
-
-        // torch light reflection
-        waterRefl += torchColor*NL_TORCH_INTENSITY*(lit.x*lit.x + lit.x)*bump*10.0;
-
-        if (fractCposY>0.8 || fractCposY<0.9) { // flat plane
+        // Adjust reflection based on plane orientation
+        if (fractCposY > 0.8 || fractCposY < 0.9) { // flat plane
             waterRefl *= 1.0 - clamp(wPos.y, 0.0, 0.66);
         } else { // slanted plane and highly slanted plane
-            waterRefl *= 0.1*sin(t*2.0+cPos.y*12.566) + (fractCposY > 0.9 ? 0.2 : 0.4);
+            waterRefl *= 0.1 * sin(t * 2.0 + cPos.y * 12.566) + (fractCposY > 0.9 ? 0.2 : 0.4);
         }
     } else { // reflection for side plane
-        bump *= 0.5 + 0.5*sin(1.5*t + dot(cPos, vec3_splat(NL_CONST_PI_HALF)));
+        bump *= 0.5 + 0.5 * sin(1.5 * t + dot(cPos, vec3_splat(NL_CONST_PI_HALF)));
 
         cosR = max(sqrt(dot(viewDir.xz, viewDir.xz)), step(wPos.y, 0.5));
-        cosR += (1.0-cosR*cosR)*bump;
+        cosR += (1.0 - cosR * cosR) * bump;
 
         waterRefl = zenithCol;
     }
 
-    // mask sky reflection under shade
+    // Mask sky reflection under shade
     if (!end) {
-        waterRefl *= 0.05 + lit.y*1.14;
+        waterRefl *= 0.05 + lit.y * 1.14;
     }
 
+    // Calculate Fresnel effect and opacity
     float fresnel = calculateFresnel(cosR, 0.03);
-    float opacity = 1.0-cosR;
+    float opacity = 1.0 - cosR;
 
-    color.rgb *= 0.22*NL_WATER_TINT*(1.0-0.8*fresnel);
+    // Apply color tint to water
+    color.rgb *= 0.22 * NL_WATER_TINT * (1.0 - 0.8 * fresnel);
 
+    // Adjust alpha based on water transparency settings
 #ifdef NL_WATER_FOG_FADE
     color.a *= NL_WATER_TRANSPARENCY;
 #else
-    color.a = COLOR.a*NL_WATER_TRANSPARENCY;
+    color.a = COLOR.a * NL_WATER_TRANSPARENCY;
 #endif
-    color.a += (1.0-color.a)*opacity*opacity;
+    color.a += (1.0 - color.a) * opacity * opacity;
 
+    // Apply water wave effect based on distance from camera
 #ifdef NL_WATER_WAVE
-    if(camDist < 14.0) {
+    if (camDist < 14.0) {
 #ifdef NL_WATER_NOISE
-        wPos.y -= 0.2*noise(3.0*wPos.xyz - 0.2*t) / 1.0 * 1.0;
+        // Use noise function to create smooth wave effect
+        wPos.y -= 0.2 * noise(3.0 * wPos.xyz - 0.2 * t) / 1.0;
 #else
+        // Use bump value for simpler wave effect
         wPos.y -= bump;
 #endif
     }
@@ -134,5 +121,4 @@ vec4 nlWater(
 
     return vec4(waterRefl, fresnel);
 }
-
 #endif
