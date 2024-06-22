@@ -8,6 +8,7 @@ DEFAULT_MATERIALS="RenderChunk Clouds Sky EndSky LegacyCubemap Actor SunMoon"
 #  NAMES     = Names/descriptions for options
 #  MATERIALS = Materials to compile for options
 SUBPACK_OPTIONS=(
+  PBR
   DWGR
   FULL
   ULTRA
@@ -18,6 +19,7 @@ SUBPACK_OPTIONS=(
   DEFAULT
 )
 SUBPACK_NAMES=(
+  "pbr"
   "dwgr"
   "full"
   "ultra"
@@ -28,6 +30,7 @@ SUBPACK_NAMES=(
   "Default"
 )
 SUBPACK_MATERIALS=(
+   "Clouds ; RenderChunk ;  Sky ; EndSky ; SunMoon"
    "RenderChunk"
   "Clouds ; RenderChunk ;  Sky ; EndSky"
   "Clouds ; RenderChunk"
